@@ -7,6 +7,7 @@ const Dws = () => import('@/views/dws/index.vue')
 const Ads = () => import('@/views/ads/index.vue')
 const Source = () => import('@/views/source/index.vue')
 const Partition = () => import('@/views/partition/index.vue')
+const Seal = () => import('@/views/seal/index.vue')
 const Cleanse = () => import('@/views/cleanse/index.vue')
 const Transform = () => import('@/views/transform/index.vue')
 const Quality = () => import('@/views/quality/index.vue')
@@ -30,6 +31,7 @@ const router = createRouter({
     { path: '/ads', name: 'ads', component: Ads },
     { path: '/source', name: 'source', component: Source },
     { path: '/partition', name: 'partition', component: Partition },
+    { path: '/seal', name: 'seal', component: Seal },
     { path: '/cleanse', name: 'cleanse', component: Cleanse },
     { path: '/transform', name: 'transform', component: Transform },
     { path: '/quality', name: 'quality', component: Quality },

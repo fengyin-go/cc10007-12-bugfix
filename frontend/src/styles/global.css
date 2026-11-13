@@ -35,3 +35,35 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+
+/* 封存版本治理（seal revocation） */
+.tag { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; white-space: nowrap; }
+.tag-ok { background: #e7f6ec; color: #1a7f37; border: 1px solid #abe4c0; }
+.tag-bad { background: #fdecec; color: #b42318; border: 1px solid #f3b4ae; }
+.tag-null { background: #f1f3f7; color: #475569; border: 1px solid #cbd5e1; }
+.tag-pending { background: #fff6e0; color: #b25e09; border: 1px solid #f5d08a; }
+.tag-readonly { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+.stat-alert .stat-value { color: #b42318; }
+.section-title { margin: 18px 0 8px; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+.title-hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+.notice-bar { border-radius: 8px; padding: 8px 12px; margin: 8px 0; font-size: 13px; }
+.notice-warn { background: #fff6e0; border: 1px solid #f5d08a; color: #92600a; }
+.notice-ok { background: #e7f6ec; border: 1px solid #abe4c0; color: #1a7f37; }
+.drift-chip { background: #fdecec; color: #b42318; border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+.cell-stale { color: #b42318; font-weight: 600; }
+.archive-table { background: #fafbff; }
+.archive-table td, .archive-table th { background: transparent; }
+.journal-table td { font-size: 12px; }
+.kind-chip { background: #eef2f7; border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.review-box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.message-line { align-items: center; gap: 12px; }
+.retry-btn { padding: 3px 12px; }
+.ok-text { color: #1a7f37; }
+.seal-banner { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 18px; }
+.seal-banner-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.seal-banner-head h3, .seal-banner-head h4 { margin: 0; font-size: 14px; }
+.cand-chip { display: inline-block; background: #eef2f7; border-radius: 999px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 12px; }
+.seal-drift { margin-top: 8px; font-size: 12px; }
+.archive-title { margin: 14px 0 6px; font-size: 13px; color: #4338ca; }
+.seal-overview-head { margin-top: 20px; }
+button.link:disabled { color: #9aa6b2; cursor: not-allowed; }

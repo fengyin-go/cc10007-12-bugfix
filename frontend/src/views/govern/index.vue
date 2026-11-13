@@ -67,6 +67,67 @@
       <span>共 {{ total }} 条存储治理记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
     </footer>
+
+    <section class="seal-banner">
+      <header class="seal-banner-head">
+        <h3>封存名单（沿 partition→govern 引用边，仅当前 revoke_seq）</h3>
+        <RouterLink class="link" to="/seal">前往封存版本治理 →</RouterLink>
+      </header>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>治理策略</th>
+            <th>引用分区</th>
+            <th>治理参数</th>
+            <th>封存状态</th>
+            <th>快照版本</th>
+            <th>分区当前版本</th>
+            <th>回执</th>
+            <th>只读</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="candidate in activeCandidates" :key="candidate.govCode">
+            <td>{{ candidate.govCode }}</td>
+            <td>{{ candidate.partCode }}</td>
+            <td>{{ candidate.governType }}={{ candidate.retainDays }}</td>
+            <td><span :class="sealStateTag(candidate.state)">{{ sealStateLabel(candidate.state) }}</span></td>
+            <td :class="candidate.snapshotRevokeSeq !== currentSeq(candidate.partCode) ? 'cell-stale' : ''">
+              seq={{ candidate.snapshotRevokeSeq }} / {{ candidate.snapshotSealRev ?? 'null' }}
+            </td>
+            <td>seq={{ currentSeq(candidate.partCode) }}</td>
+            <td>{{ candidate.receiptNo ?? '—' }}</td>
+            <td>{{ candidate.readonly ? '是' : '否' }}</td>
+          </tr>
+          <tr v-if="!activeCandidates.length">
+            <td colspan="8" class="empty-state">当前版本区暂无封存候选</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 class="archive-title">archive=readonly 只读归档区</h4>
+      <table class="data-table archive-table">
+        <thead>
+          <tr><th>治理策略</th><th>引用分区</th><th>回执</th><th>归档版本</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="candidate in sealBoard.archive" :key="candidate.govCode">
+            <td>{{ candidate.govCode }}</td>
+            <td>{{ candidate.partCode }}</td>
+            <td>{{ candidate.receiptNo ?? '—' }}</td>
+            <td>seq={{ candidate.snapshotRevokeSeq }} / {{ candidate.snapshotSealRev ?? 'null' }}</td>
+            <td>{{ candidate.lastNote }}</td>
+          </tr>
+          <tr v-if="!sealBoard.archive.length">
+            <td colspan="5" class="empty-state">归档区为空</td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-if="sealDrift.length" class="error-text seal-drift">
+        版本漂移：<span v-for="d in sealDrift" :key="d.govCode">{{ d.detail }}；</span>
+      </p>
+      <p v-else class="ok-text seal-drift">核对一致：本清单与分区详情、概览同源，未持旧快照产出封存名单。</p>
+    </section>
   </section>
 </template>
 
@@ -79,13 +140,45 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { loadSealBoard } from '@/api/seal-service'
 import type { EntryRow } from '@/data/types'
+import type { SealBoard, SealCandidateState } from '@/data/seal-types'
 
 const meta = moduleMeta('govern')
 const columns = ["策略编号", "目标表名", "治理类型", "冷热判定字段", "生命周期天数", "归档目标", "回收站保留", "执行频率"]
 const actions = ["提交校验", "启用治理", "停用治理"]
 const statuses = ["草稿", "待校验", "已启用", "已停用"]
 const stats = [{"label": "治理策略总数", "value": 0}, {"label": "已启用策略", "value": 0}, {"label": "待校验策略", "value": 0}]
+
+const sealBoard = ref<SealBoard>(loadSealBoard())
+const sealDrift = computed(() => sealBoard.value.drift)
+const activeCandidates = computed(() =>
+  sealBoard.value.state.candidates.filter((candidate) => candidate.state !== 'readonly'),
+)
+
+function currentSeq(partCode: string): number {
+  return sealBoard.value.activePartitions.find((part) => part.partCode === partCode)?.revokeSeq ?? 0
+}
+
+function sealStateLabel(state: SealCandidateState | string): string {
+  const map: Record<string, string> = {
+    pending: '待封存',
+    sealed: '已封存',
+    revoked: '已吊销',
+    readonly: '只读归档',
+  }
+  return map[state] ?? state
+}
+
+function sealStateTag(state: SealCandidateState | string): string {
+  const map: Record<string, string> = {
+    pending: 'tag tag-pending',
+    sealed: 'tag tag-ok',
+    revoked: 'tag tag-bad',
+    readonly: 'tag tag-readonly',
+  }
+  return map[state] ?? 'tag'
+}
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)

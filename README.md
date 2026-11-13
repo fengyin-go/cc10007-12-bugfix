@@ -57,6 +57,7 @@ npm run build
 | 数据同步 | `datasync` | 同步链路 | 链路编号、源端连接、目标端连接 |
 | 快照管理 | `snapshot` | 快照策略 | 策略编号、目标表名、快照周期 |
 | 存储治理 | `govern` | 治理策略 | 策略编号、目标表名、治理类型 |
+| 封存版本治理 | `seal`（独立数据域） | 分区封存版本 / 治理候选 | 方案编号、seal_rev、revoke_seq、候选状态、封存回执 |
 | 任务监控 | `monitor` | 监控配置 | 配置编号、关联任务、监控指标 |
 | 变更审计 | `audit` | 审计记录 | 记录编号、操作表名、变更类型 |
 | 编目检索 | `catalog` | 编目条目 | 条目编号、数据集名称、所属分层 |
@@ -69,6 +70,24 @@ npm run build
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
 - 想回到初始数据：清掉浏览器里 `data-layer-studio:entries` 这一项，或调用 `resetModule(模块)`。
+
+## 封存版本治理（seal_rev / revoke_seq）
+
+侧栏「封存版本治理」(`/seal`) 是一个独立数据域，沿 `partition→govern` 引用边管理封存版本，
+与通用台账分开持久化（localStorage 键 `data-layer-studio:seal-revocation`，页面内「重置断点现场」即可复位）。
+
+- **下发吊销**：分区方案（主对象）的 `seal_rev` 置 `null`、`revoke_seq` 递增后，沿引用边下发：
+  pending 候选**立即 revoke**，已封存 receipt **只读**并迁入独立的 `archive=readonly` 区，不覆盖封存事实。
+- **唯一版本**：seal/unseal 交叉以分区当前 `revoke_seq` 判定唯一版本；带旧序号（旧快照）的封存/启封请求一律拒绝，
+  任何 pending 计划都不能借旧快照复活。
+- **同源展示**：治理清单、分区详情页、运营概览都只读 `seal-service` 的同一数据源，只显示当前 `revoke_seq`，
+  从结构上杜绝「侧栏残留旧章、详情页另一个结果」。
+- **回看核对**：以分区策略为主对象核对分区窗口与候选快照版本，并输出漂移清单。
+- **可解释、可重试、留证据**：未命中返回说明；故障注入可模拟写入失败（失败不改数据、可重试）；
+  中断事务在下次加载时按证据回滚恢复。下发、封存、启封、失败、重试、中断恢复、异常回收、核对全部写入证据流水。
+
+代码组织：领域类型 `src/data/seal-types.ts`、断点播种 `src/data/seal-seed.ts`、持久化与中断恢复
+`src/data/seal-store.ts`、业务流转 `src/api/seal-service.ts`、页面 `src/views/seal/index.vue`。
 
 领域：数据工程
 子方向：数仓与数据湖
